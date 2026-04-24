@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodSync — Personalized Relaxation Recommender</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #FFF5F5;
+    min-height: 100vh;
+    color: #5a3a5a;
+  }
+
+  /* ===== LAYOUT ===== */
+  .app-wrapper { display: flex; min-height: 100vh; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 240px;
+    background: #fff;
+    border-right: 1.5px solid #fce4ee;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1.5px solid #fce4ee;
+  }
+  .logo-row { display: flex; align-items: center; gap: 10px; }
+  .logo-dot {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: #FFC8DD;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-dot svg { width: 16px; height: 16px; }
+  .logo-name { font-size: 17px; font-weight: 700; color: #c96f96; letter-spacing: -0.3px; }
+  .logo-tagline { font-size: 10px; color: #e0b8cc; margin-top: 3px; font-weight: 400; }
+
+  .nav-section {
+    font-size: 9px; color: #e0b8cc;
+    padding: 18px 24px 6px;
+    letter-spacing: 1.3px; text-transform: uppercase; font-weight: 600;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px 11px 24px;
+    font-size: 13px; color: #c0a0b8; cursor: pointer;
+    border-radius: 0 18px 18px 0;
+    margin-right: 14px;
+    transition: all 0.18s;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: #FFF0F7; color: #c96f96; }
+  .nav-item.active {
+    background: rgba(255,200,221,0.2);
+    color: #c96f96;
+    border-left-color: #FFC8DD;
+    font-weight: 600;
+  }
+  .nav-icon { width: 18px; height: 18px; flex-shrink: 0; }
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 18px 24px;
+    border-top: 1.5px solid #fce4ee;
+    font-size: 10px; color: #ddc0d0; line-height: 1.8;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  .topbar {
+    background: #fff;
+    border-bottom: 1.5px solid #fce4ee;
+    padding: 0 32px;
+    height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-title { font-size: 15px; font-weight: 700; color: #8a4a6e; }
+  .topbar-bc { font-size: 12px; color: #d4a0bc; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-user { font-size: 12px; color: #b090a8; font-weight: 500; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #CDB4DB;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #5a2a7a;
+  }
+
+  .content { flex: 1; padding: 32px; max-width: 860px; }
+
+  /* ===== PAGE SWITCHING ===== */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: #fff;
+    border-radius: 22px;
+    padding: 24px 28px;
+    border: 1.5px solid #fce4ee;
+    margin-bottom: 18px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700; color: #8a4a6e;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ===== HERO BANNER ===== */
+  .hero-banner {
+    background: #fff;
+    border-radius: 24px;
+    padding: 28px 32px;
+    border: 1.5px solid #fce4ee;
+    margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  }
+  .hero-title { font-size: 20px; font-weight: 700; color: #8a4a6e; margin-bottom: 6px; }
+  .hero-sub { font-size: 12px; color: #c0a0b8; line-height: 1.8; max-width: 320px; }
+  .hero-badge {
+    display: inline-block;
+    background: #FFC8DD; color: #8a2a50;
+    border-radius: 20px; padding: 5px 16px;
+    font-size: 10px; font-weight: 700; margin-top: 12px;
+    letter-spacing: 0.5px;
+  }
+  .hero-illo {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: #FFF0F7; border: 2.5px solid #FFC8DD;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ===== STAT GRID ===== */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: #fff;
+    border-radius: 20px; padding: 20px 22px;
+    border: 1.5px solid #fce4ee;
+  }
+  .stat-card.blue { background: #B4E4FF; border-color: #90d0f5; }
+  .stat-card.purple { background: #CDB4DB; border-color: #b898cc; }
+  .stat-label {
+    font-size: 10px; font-weight: 600; color: #b090a8;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+  }
+  .stat-card.blue .stat-label { color: #2a6ea8; }
+  .stat-card.purple .stat-label { color: #5a2a8a; }
+  .stat-value { font-size: 28px; font-weight: 700; color: #8a4a6e; line-height: 1; }
+  .stat-card.blue .stat-value { color: #0c447c; }
+  .stat-card.purple .stat-value { color: #3a1a6a; }
+  .stat-desc { font-size: 10px; color: #d4a0bc; margin-top: 5px; }
+  .stat-card.blue .stat-desc { color: #4a90c0; }
+  .stat-card.purple .stat-desc { color: #8a5aaa; }
+
+  /* ===== INPUT PAGE ===== */
+  .input-label-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .input-label { font-size: 13px; font-weight: 600; color: #8a4a6e; }
+  .input-sub { font-size: 11px; color: #c0a0b8; }
+  .slider-pill {
+    border-radius: 14px; padding: 5px 18px;
+    font-size: 15px; font-weight: 700;
+    min-width: 58px; text-align: center; flex-shrink: 0;
+  }
+  .slider-pill.pink { background: #FFC8DD; color: #8a2a50; }
+  .slider-pill.blue { background: #A2D2FF; color: #0c447c; }
+
+  /* custom slider sport */
+  input.slider-sport {
+    -webkit-appearance: none; appearance: none;
+    flex: 1; height: 8px; border-radius: 8px;
+    background: #FFC8DD60; outline: none; cursor: pointer;
+  }
+  input.slider-sport::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    border-radius: 50%; background: #FFC8DD;
+    border: 3px solid #fff; box-shadow: 0 0 0 2px #FFC8DD80; cursor: pointer;
+  }
+  /* custom slider music */
+  input.slider-music {
+    -webkit-appearance: none; appearance: none;
+    flex: 1; height: 8px; border-radius: 8px;
+    background: #A2D2FF60; outline: none; cursor: pointer;
+  }
+  input.slider-music::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    border-radius: 50%; background: #A2D2FF;
+    border: 3px solid #fff; box-shadow: 0 0 0 2px #A2D2FF80; cursor: pointer;
+  }
+
+  .slider-row { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .slider-end-label { font-size: 10px; color: #d4a0bc; font-weight: 500; }
+
+  .cat-pills { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .cat-pill {
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 11px; font-weight: 600;
+    transition: opacity 0.2s;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-primary {
+    background: #FFC8DD; color: #8a2a50;
+    border: none; border-radius: 16px;
+    padding: 13px 32px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: 'Poppins', sans-serif;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-primary:hover { background: #ffb0cc; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-outline {
+    background: #fff; color: #c96f96;
+    border: 1.5px solid #FFC8DD;
+    border-radius: 16px; padding: 11px 24px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Poppins', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-outline:hover { background: #FFF0F7; }
+  .btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .btn-hint { font-size: 11px; color: #d4a0bc; }
+
+  /* ===== HASIL PAGE ===== */
+  .empty-state {
+    text-align: center; padding: 56px 0;
+  }
+  .empty-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #FFF0F7; border: 2px solid #FFC8DD;
+    margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .empty-title { font-size: 15px; color: #c096b4; font-weight: 600; margin-bottom: 6px; }
+  .empty-sub { font-size: 12px; color: #d4b8c8; margin-bottom: 20px; }
+
+  .result-hero {
+    border-radius: 24px; padding: 26px 30px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    transition: background 0.4s;
+  }
+  .result-badge {
+    border-radius: 20px; padding: 4px 16px;
+    font-size: 10px; font-weight: 700;
+    display: inline-block; margin-bottom: 8px; letter-spacing: 0.5px;
+  }
+  .result-name { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .progress-track {
+    width: 220px; background: rgba(255,255,255,0.4);
+    border-radius: 8px; height: 10px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 8px;
+    transition: width 0.6s cubic-bezier(.4,0,.2,1), background 0.4s;
+  }
+  .score-big { font-size: 48px; font-weight: 700; line-height: 1; }
+  .score-unit { font-size: 14px; opacity: 0.6; font-weight: 400; }
+
+  .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+  .info-card {
+    background: #fff; border-radius: 18px;
+    padding: 16px 18px; border: 1.5px solid #fce4ee;
+  }
+  .info-label {
+    font-size: 10px; color: #d4a0bc;
+    margin-bottom: 5px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .info-val { font-size: 15px; font-weight: 700; color: #8a4a6e; }
+
+  .activities-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .activity-tag {
+    background: #FFF0F7; color: #c96f96;
+    border: 1px solid #FFC8DD;
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 11px; font-weight: 600;
+  }
+
+  /* ===== RULE TABLE ===== */
+  .rule-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+  .rule-table th {
+    background: #FFF0F7; padding: 10px 14px;
+    text-align: left; font-weight: 700; color: #c96f96;
+    border-bottom: 1.5px solid #fce4ee;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .rule-table td { padding: 9px 14px; color: #a07090; border-bottom: 1px solid #fdf0f8; }
+  .rule-table tr:last-child td { border-bottom: none; }
+  .rule-table tr.fired { background: rgba(180,228,255,0.15); }
+  .rule-table tr.fired td { color: #0c5080; font-weight: 600; }
+  .alpha-badge {
+    background: #B4E4FF; color: #0c447c;
+    border-radius: 10px; padding: 2px 10px;
+    font-size: 11px; font-weight: 700;
+  }
+
+  /* ===== KRITERIA PAGE ===== */
+  .krit-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+  .krit-pill { border-radius: 16px; padding: 14px 12px; text-align: center; }
+  .krit-label { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+  .krit-range { font-size: 12px; font-weight: 500; }
+  .output-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .output-pill { border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .output-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .output-label { font-size: 12px; font-weight: 600; }
+
+  /* ===== LOADING OVERLAY ===== */
+  .loading-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(255,245,245,0.7);
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 4px solid #FFC8DD;
+    border-top-color: #c96f96;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: #8a4a6e; color: #fff;
+    border-radius: 16px; padding: 12px 22px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; transform: translateY(12px);
+    transition: all 0.3s; pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .content { padding: 20px 16px; }
+    .stat-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-row">
+        <div class="logo-dot">
+          <svg viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="6" r="3.5" fill="#fff"/>
+            <path d="M2 15c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">MoodSync</div>
+        </div>
+      </div>
+      <div class="logo-tagline">Personalized Relaxation Recommender</div>
+    </div>
+
+    <div class="nav-section">Menu Utama</div>
+    <a class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard', this)">
+      <svg class="nav-icon" viewBox="0 0 18 18" fill="none" stroke="#FFC8DD" stroke-width="1.8">
+        <rect x="1" y="1" width="7" height="7" rx="2"/>
+        <rect x="10" y="1" width="7" height="7" rx="2"/>
+        <rect x="1" y="10" width="7" height="7" rx="2"/>
+        <rect x="10" y="10" width="7" height="7" rx="2"/>
+      </svg>
+      Dashboard
+    </a>
+    <a class="nav-item" id="nav-input" onclick="showPage('input', this)">
+      <svg class="nav-icon" viewBox="0 0 18 18" fill="none" stroke="#B4E4FF" stroke-width="1.8">
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M2 17c0-3.9 3.1-6 7-6s7 2.1 7 6"/>
+      </svg>
+      Profil Minat
+    </a>
+    <a class="nav-item" id="nav-hasil" onclick="showPage('hasil', this)">
+      <svg class="nav-icon" viewBox="0 0 18 18" fill="none" stroke="#CDB4DB" stroke-width="1.8">
+        <path d="M2 14l4-5 3 3 4-6 3 4"/>
+        <path d="M2 16h14"/>
+      </svg>
+      Hasil Rekomendasi
+    </a>
+
+    <div class="nav-section">Referensi</div>
+    <a class="nav-item" id="nav-kriteria" onclick="showPage('kriteria', this)">
+      <svg class="nav-icon" viewBox="0 0 18 18" fill="none" stroke="#A2D2FF" stroke-width="1.8">
+        <path d="M3 5h12M3 9h8M3 13h6"/>
+      </svg>
+      Kriteria Sistem
+    </a>
+    <a class="nav-item" id="nav-rules" onclick="showPage('rules', this)">
+      <svg class="nav-icon" viewBox="0 0 18 18" fill="none" stroke="#FFC8DD" stroke-width="1.8">
+        <rect x="2" y="2" width="14" height="14" rx="3"/>
+        <path d="M6 7h6M6 11h4"/>
+      </svg>
+      Rule Base
+    </a>
+
+    <div class="sidebar-footer">
+      MoodSync v1.0<br>
+      Fuzzy Mamdani Engine<br>
+      &copy; 2025
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title" id="topbar-title">Dashboard</span>
+        <span class="topbar-bc" id="topbar-bc">/ Beranda</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-user">Administrator</span>
+        <div class="avatar">AD</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- PAGE: DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="hero-banner">
+          <div>
+            <div class="hero-title">Halo, Administrator!</div>
+            <p class="hero-sub">Temukan rekomendasi aktivitas relaksasi yang paling sesuai berdasarkan profil minat olahraga dan musik Anda.</p>
+            <span class="hero-badge">Fuzzy Mamdani &middot; Aktif</span>
+          </div>
+          <div class="hero-illo">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="15" r="9" fill="#FFC8DD"/>
+              <path d="M8 42c0-8.8 7.2-15 16-15s16 6.2 16 15" fill="#FFC8DD" opacity=".5"/>
+              <circle cx="24" cy="15" r="5" fill="#fff" opacity=".8"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card blue">
+            <div class="stat-label">Total Analisis</div>
+            <div class="stat-value" id="d-total">0</div>
+            <div class="stat-desc">Sesi yang telah dilakukan</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-label">Skor Terakhir</div>
+            <div class="stat-value" id="d-skor">–</div>
+            <div class="stat-desc">Nilai defuzzifikasi</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Kriteria Aktif</div>
+            <div class="stat-value" style="font-size:22px">2</div>
+            <div class="stat-desc">Olahraga &amp; Musik</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rekomendasi</div>
+            <div class="stat-value" style="font-size:14px;margin-top:6px" id="d-rekom">–</div>
+            <div class="stat-desc">Hasil terbaru</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="card-title-dot" style="background:#FFC8DD"></span>
+            Tentang MoodSync
+          </div>
+          <p style="font-size:12px;color:#a07090;line-height:1.9;margin-bottom:18px">
+            MoodSync membantu Anda menemukan aktivitas relaksasi yang paling cocok berdasarkan
+            seberapa besar minat Anda pada olahraga dan musik. Sistem menggunakan metode
+            <strong style="color:#c96f96">Fuzzy Mamdani</strong> dengan 9 aturan inferensi
+            sehingga hasilnya terasa personal dan kontekstual.
+          </p>
+          <div class="btn-row">
+            <button class="btn-primary" onclick="showPage('input', document.getElementById('nav-input'))">Mulai Analisis</button>
+            <button class="btn-outline" onclick="showPage('kriteria', document.getElementById('nav-kriteria'))">Lihat Kriteria</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: INPUT -->
+      <div class="page" id="page-input">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-title-dot" style="background:#FFC8DD"></span>
+            Minat Olahraga
+          </div>
+          <div class="input-label-row">
+            <span class="input-label">Seberapa suka Anda berolahraga?</span>
+            <span class="input-sub">Geser slider untuk menyesuaikan</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-end-label">Rendah</span>
+            <input class="slider-sport" type="range" min="0" max="100" step="1" value="50" id="sl-sport"
+              oninput="document.getElementById('pv-sport').textContent=this.value;updateCatPills()">
+            <span class="slider-end-label">Tinggi</span>
+            <div class="slider-pill pink" id="pv-sport">50</div>
+          </div>
+          <div class="cat-pills" id="cat-sport-pills"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="card-title-dot" style="background:#A2D2FF"></span>
+            Minat Musik
+          </div>
+          <div class="input-label-row">
+            <span class="input-label">Seberapa suka Anda mendengarkan musik?</span>
+            <span class="input-sub">Geser slider untuk menyesuaikan</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-end-label" style="color:#90b8d8">Rendah</span>
+            <input class="slider-music" type="range" min="0" max="100" step="1" value="50" id="sl-music"
+              oninput="document.getElementById('pv-music').textContent=this.value;updateCatPills()">
+            <span class="slider-end-label" style="color:#90b8d8">Tinggi</span>
+            <div class="slider-pill blue" id="pv-music">50</div>
+          </div>
+          <div class="cat-pills" id="cat-music-pills"></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="calculate()">Dapatkan Rekomendasi</button>
+          <span class="btn-hint">Hasil muncul otomatis di halaman Hasil Rekomendasi</span>
+        </div>
+      </div>
+
+      <!-- PAGE: HASIL -->
+      <div class="page" id="page-hasil">
+        <div id="hasil-empty" class="empty-state">
+          <div class="empty-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="12" r="6" fill="#FFC8DD"/>
+              <path d="M4 29c0-6.6 5.4-11 12-11s12 4.4 12 11" fill="#FFC8DD" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="empty-title">Belum ada hasil analisis</div>
+          <div class="empty-sub">Isi profil minat Anda terlebih dahulu untuk mendapatkan rekomendasi.</div>
+          <button class="btn-primary" onclick="showPage('input', document.getElementById('nav-input'))">Isi Profil Minat</button>
+        </div>
+
+        <div id="hasil-content" style="display:none">
+          <div class="result-hero" id="result-hero">
+            <div>
+              <div class="result-badge" id="result-badge">–</div>
+              <div class="result-name" id="result-name">–</div>
+              <div class="progress-track">
+                <div class="progress-fill" id="result-bar" style="width:0%"></div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div class="score-big" id="result-score-big">–</div>
+              <div class="score-unit">/ 100</div>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="info-label">Minat Olahraga</div>
+              <div class="info-val" id="ri-sport">–</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Minat Musik</div>
+              <div class="info-val" id="ri-music">–</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Kategori Olahraga</div>
+              <div class="info-val" id="ri-catsport" style="font-size:13px">–</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">Kategori Musik</div>
+              <div class="info-val" id="ri-catmusic" style="font-size:13px">–</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span class="card-title-dot" style="background:#CDB4DB"></span>
+              Penjelasan Rekomendasi
+            </div>
+            <p class="rekom-text" id="rekom-text" style="font-size:13px;color:#a07090;line-height:1.9">–</p>
+            <div class="activities-grid" id="activities-grid"></div>
+          </div>
+
+          <button class="btn-outline" onclick="showPage('input', document.getElementById('nav-input'))">Ubah Profil Minat</button>
+        </div>
+      </div>
+
+      <!-- PAGE: KRITERIA -->
+      <div class="page" id="page-kriteria">
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#FFC8DD"></span>Minat Olahraga — Kategori Input</div>
+          <div class="krit-row">
+            <div class="krit-pill" style="background:#FFF0F7">
+              <div class="krit-label" style="color:#8a2a50">Rendah</div>
+              <div class="krit-range" style="color:#c96f96">0 – 40</div>
+            </div>
+            <div class="krit-pill" style="background:#FFC8DD40">
+              <div class="krit-label" style="color:#8a2a50">Sedang</div>
+              <div class="krit-range" style="color:#c96f96">30 – 70</div>
+            </div>
+            <div class="krit-pill" style="background:#FFC8DD80">
+              <div class="krit-label" style="color:#8a2a50">Tinggi</div>
+              <div class="krit-range" style="color:#8a2a50">60 – 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#A2D2FF"></span>Minat Musik — Kategori Input</div>
+          <div class="krit-row">
+            <div class="krit-pill" style="background:#EFF8FF">
+              <div class="krit-label" style="color:#0c447c">Rendah</div>
+              <div class="krit-range" style="color:#378add">0 – 40</div>
+            </div>
+            <div class="krit-pill" style="background:#B4E4FF50">
+              <div class="krit-label" style="color:#0c447c">Sedang</div>
+              <div class="krit-range" style="color:#378add">30 – 70</div>
+            </div>
+            <div class="krit-pill" style="background:#A2D2FF80">
+              <div class="krit-label" style="color:#0c447c">Tinggi</div>
+              <div class="krit-range" style="color:#0c447c">60 – 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot" style="background:#CDB4DB"></span>Output Rekomendasi</div>
+          <div class="output-grid">
+            <div class="output-pill" style="background:#FFE8EE">
+              <div class="output-dot" style="background:#ff7aaa"></div>
+              <span class="output-label" style="color:#8a2a50">Kurang Disarankan</span>
+            </div>
+            <div class="output-pill" style="background:#FFF9E0">
+              <div class="output-dot" style="background:#FFD166"></div>
+              <span class="output-label" style="color:#7a5a00">Netral</span>
+            </div>
+            <div class="output-pill" style="background:#E8F5FF">
+              <div class="output-dot" style="background:#63BFFF"></div>
+              <span class="output-label" style="color:#0c447c">Disarankan</span>
+            </div>
+            <div class="output-pill" style="background:#EDFFF5">
+              <div class="output-dot" style="background:#4ade80"></div>
+              <span class="output-label" style="color:#14532d">Sangat Disarankan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: RULES -->
+      <div class="page" id="page-rules">
+        <div class="card" style="overflow-x:auto">
+          <div class="card-title"><span class="card-title-dot" style="background:#FFC8DD"></span>Rule Base — 9 Aturan Fuzzy Mamdani</div>
+          <p style="font-size:11px;color:#c0a0b8;margin-bottom:14px">
+            Baris berwarna biru menunjukkan aturan yang aktif berdasarkan input terakhir Anda.
+          </p>
+          <table class="rule-table" id="rule-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Olahraga</th>
+                <th>Musik</th>
+                <th>Output</th>
+                <th>Alpha (α)</th>
+              </tr>
+            </thead>
+            <tbody id="rule-tbody">
+              <!-- Diisi oleh JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-wrapper -->
+
+<script>
+// ===== STATE =====
+let sessionCount = 0;
+let lastResult = null;
+
+// ===== WARNA PER KATEGORI =====
+const CAT_COLORS = {
+  kurang_disarankan: { hero: '#FFE8EE', text: '#8a2a50', bar: '#ff7aaa', badge: '#FFB8CC', badgeText: '#8a2a50' },
+  netral:            { hero: '#FFF9E0', text: '#7a5a00', bar: '#FFD166', badge: '#FFE8A0', badgeText: '#7a5a00' },
+  disarankan:        { hero: '#E8F5FF', text: '#0c447c', bar: '#63BFFF', badge: '#B4E4FF', badgeText: '#0c447c' },
+  sangat_disarankan: { hero: '#EDFFF5', text: '#14532d', bar: '#4ade80', badge: '#A8F0C0', badgeText: '#14532d' },
+};
+
+const CAT_LABELS = {
+  kurang_disarankan: 'Kurang Disarankan',
+  netral:            'Netral',
+  disarankan:        'Disarankan',
+  sangat_disarankan: 'Sangat Disarankan',
+};
+
+// ===== NAVIGASI =====
+const PAGE_TITLES = {
+  dashboard: 'Dashboard',
+  input:     'Profil Minat',
+  hasil:     'Hasil Rekomendasi',
+  kriteria:  'Kriteria Sistem',
+  rules:     'Rule Base',
+};
+const PAGE_BCS = {
+  dashboard: '/ Beranda',
+  input:     '/ Profil Minat',
+  hasil:     '/ Hasil Rekomendasi',
+  kriteria:  '/ Kriteria',
+  rules:     '/ Rule Base',
+};
+
+function showPage(name, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[name] || name;
+  document.getElementById('topbar-bc').textContent    = PAGE_BCS[name]   || '';
+
+  // Jika buka rules & ada hasil, tampilkan aturan yang aktif
+  if (name === 'rules') renderRuleTable(lastResult ? lastResult.fired_rules : null);
+}
+
+// ===== FUNGSI KEANGGOTAAN (duplikat di client untuk preview real-time) =====
+function trapMF(x, a, b, c, d) {
+  if (x <= a || x >= d) return 0;
+  if (x < b) return (x - a) / (b - a);
+  if (x <= c) return 1;
+  return (d - x) / (d - c);
+}
+function triMF(x, a, b, c) {
+  if (x <= a || x >= c) return 0;
+  if (x <= b) return (x - a) / (b - a);
+  return (c - x) / (c - b);
+}
+function fuzzify(v) {
+  return {
+    rendah: trapMF(v, 0, 0, 30, 45),
+    sedang: triMF(v, 25, 50, 75),
+    tinggi: trapMF(v, 55, 70, 100, 100),
+  };
+}
+
+// ===== PREVIEW CAT PILLS =====
+function updateCatPills() {
+  const s = parseInt(document.getElementById('sl-sport').value);
+  const m = parseInt(document.getElementById('sl-music').value);
+  const muS = fuzzify(s), muM = fuzzify(m);
+
+  const sportStyles = [
+    ['rendah', '#FFF0F7', '#c96f96'],
+    ['sedang', '#FFD8E880', '#a05080'],
+    ['tinggi', '#FFC8DD80', '#8a2a50'],
+  ];
+  const musicStyles = [
+    ['rendah', '#EFF8FF', '#378add'],
+    ['sedang', '#D0EEFF80', '#185fa5'],
+    ['tinggi', '#A2D2FF80', '#0c447c'],
+  ];
+
+  const render = (mu, styles, containerId) => {
+    document.getElementById(containerId).innerHTML = styles.map(([key, bg, color]) => {
+      const pct = Math.round(mu[key] * 100);
+      const opacity = pct > 4 ? '1' : '0.35';
+      return `<span class="cat-pill" style="background:${bg};color:${color};opacity:${opacity}">
+        ${key.charAt(0).toUpperCase() + key.slice(1)} ${pct}%
+      </span>`;
+    }).join('');
+  };
+
+  render(muS, sportStyles, 'cat-sport-pills');
+  render(muM, musicStyles, 'cat-music-pills');
+}
+
+// ===== KALKULASI VIA API =====
+async function calculate() {
+  const sport = parseInt(document.getElementById('sl-sport').value);
+  const music = parseInt(document.getElementById('sl-music').value);
+
+  document.getElementById('loading').classList.add('show');
+
+  try {
+    const resp = await fetch('/api/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sport, music }),
+    });
+
+    if (!resp.ok) throw new Error('Server error');
+
+    const data = await resp.json();
+    lastResult = data;
+    sessionCount++;
+
+    renderResult(data);
+    updateDashboard(data);
+    showPage('hasil', document.getElementById('nav-hasil'));
+    showToast('Rekomendasi berhasil dibuat!');
+  } catch (err) {
+    showToast('Gagal terhubung ke server. Pastikan Flask berjalan.');
+  } finally {
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+
+// ===== RENDER HASIL =====
+function renderResult(data) {
+  document.getElementById('hasil-empty').style.display = 'none';
+  document.getElementById('hasil-content').style.display = 'block';
+
+  const col = CAT_COLORS[data.category];
+  const hero = document.getElementById('result-hero');
+  hero.style.background = col.hero;
+  hero.style.color       = col.text;
+
+  const badge = document.getElementById('result-badge');
+  badge.textContent         = data.label;
+  badge.style.background    = col.badge;
+  badge.style.color         = col.badgeText;
+
+  document.getElementById('result-name').textContent    = data.label;
+  document.getElementById('result-score-big').textContent = data.crisp_score.toFixed(1);
+
+  const bar = document.getElementById('result-bar');
+  bar.style.width      = data.crisp_score.toFixed(0) + '%';
+  bar.style.background = col.bar;
+
+  document.getElementById('ri-sport').textContent    = data.sport_value + ' / 100';
+  document.getElementById('ri-music').textContent    = data.music_value + ' / 100';
+  document.getElementById('ri-catsport').textContent = data.dominant_sport;
+  document.getElementById('ri-catmusic').textContent = data.dominant_music;
+  document.getElementById('rekom-text').textContent  = data.recommendation;
+
+  // Aktivitas yang disarankan
+  document.getElementById('activities-grid').innerHTML = data.activities
+    .map(a => `<span class="activity-tag">${a}</span>`).join('');
+}
+
+// ===== RENDER RULE TABLE =====
+function renderRuleTable(firedRules) {
+  const ORDER = ['rendah', 'sedang', 'tinggi'];
+  const allRules = [];
+  for (const o of ORDER) for (const m of ORDER) {
+    const match = firedRules ? firedRules.find(r => r.olahraga_cat === o && r.musik_cat === m) : null;
+    allRules.push(match || { olahraga_cat: o, musik_cat: m, output_cat: '–', mu_olahraga: 0, mu_musik: 0, alpha: 0 });
+  }
+
+  document.getElementById('rule-tbody').innerHTML = allRules.map((r, i) => {
+    const active = r.alpha > 0.001;
+    const outLabel = CAT_LABELS[r.output_cat] || r.output_cat;
+    return `<tr class="${active ? 'fired' : ''}">
+      <td>${i + 1}</td>
+      <td>${r.olahraga_cat.charAt(0).toUpperCase() + r.olahraga_cat.slice(1)}</td>
+      <td>${r.musik_cat.charAt(0).toUpperCase() + r.musik_cat.slice(1)}</td>
+      <td>${outLabel}</td>
+      <td>${active
+        ? `<span class="alpha-badge">${r.alpha.toFixed(3)}</span>`
+        : `<span style="color:#e0c8d8;font-size:11px">${r.alpha.toFixed(3)}</span>`
+      }</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== UPDATE DASHBOARD =====
+function updateDashboard(data) {
+  document.getElementById('d-total').textContent = sessionCount;
+  document.getElementById('d-skor').textContent  = data.crisp_score.toFixed(1);
+  document.getElementById('d-rekom').textContent = data.label;
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ===== INIT =====
+updateCatPills();
+renderRuleTable(null);
+</script>
+</body>
+</html>
