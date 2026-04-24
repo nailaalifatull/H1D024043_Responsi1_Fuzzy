@@ -4,7 +4,7 @@ Sistem ini merupakan implementasi Logika Fuzzy menggunakan metode Mamdani untuk 
 
 ## Identitas Mahasiswa
 
-- **Nama**: Naila Alifatul Mabruroh
+- **Nama**: Naila Alifatul
 - **NIM**: H1D024043
 - **Shift Baru**: Shift D
 - **Shift KRS**: Shift H
@@ -24,24 +24,9 @@ Sistem menggunakan dua jenis fungsi keanggotaan:
 
 #### Fungsi Trapesium
 Digunakan untuk kategori di ujung (Rendah dan Tinggi).
-$$
-\mu(x; a, b, c, d) = \begin{cases} 
-0, & x \leq a \text{ atau } x \geq d \\
-\frac{x-a}{b-a}, & a < x < b \\
-1, & b \leq x \leq c \\
-\frac{d-x}{d-c}, & c < x < d 
-\end{cases}
-$$
 
 #### Fungsi Segitiga 
 Digunakan untuk kategori di tengah (Sedang/Netral).
-$$
-\mu(x; a, b, c) = \begin{cases} 
-0, & x \leq a \text{ atau } x \geq c \\
-\frac{x-a}{b-a}, & a < x \leq b \\
-\frac{c-x}{c-b}, & b < x < c 
-\end{cases}
-$$
 
 **Himpunan Fuzzy:**
 - **Rendah**: Trapesium(0, 0, 30, 45)
@@ -76,12 +61,5 @@ Sistem menggunakan metode **Mamdani**:
 ---
 
 ### 5. Defuzzifikasi
-Metode yang digunakan adalah **Centroid**. Rumus matematisnya:
-$$
-z^* = \frac{\int z \cdot \mu_{agg}(z) dz}{\int \mu_{agg}(z) dz}
-$$
-Secara diskrit diimplementasikan sebagai:
-$$
-z^* = \frac{\sum z_i \cdot \mu_{agg}(z_i)}{\sum \mu_{agg}(z_i)}
-$$
-Di mana $z^*$ adalah nilai crisp akhir yang akan menentukan kategori rekomendasi.
+Metode yang digunakan adalah **Centroid**. 
+Di mana nilai crisp akhir yang akan menentukan kategori rekomendasi.
